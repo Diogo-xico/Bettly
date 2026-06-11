@@ -19,7 +19,7 @@ import {
 import { cn } from '@/lib/utils'
 
 export function MyBets() {
-  const { session } = useAuth()
+  const { session, profile } = useAuth()
   const [bets, setBets] = useState<Bet[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -117,8 +117,30 @@ export function MyBets() {
     await loadBets()
   }
 
+  const profit = bets.reduce((sum, bet) => sum + betProfit(bet), 0)
+  const pendingStake = bets
+    .filter((bet) => bet.status === 'pending')
+    .reduce((sum, bet) => sum + bet.stake, 0)
+  const balance = (profile?.starting_balance ?? 0) + profit - pendingStake
+
   return (
     <div className="flex flex-col gap-6">
+      <Card className="border-none bg-gradient-to-r from-violet-600 via-red-600 to-lime-400 text-white">
+        <CardContent className="flex items-center justify-between pt-6">
+          <div>
+            <p className="text-sm opacity-90">O teu saldo</p>
+            <p className="text-3xl font-bold">{balance.toFixed(2)} €</p>
+          </div>
+          <div className="text-right">
+            <p className="text-sm opacity-90">Lucro</p>
+            <p className="text-lg font-semibold">
+              {profit >= 0 ? '+' : ''}
+              {profit.toFixed(2)} €
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle>Registar nova aposta</CardTitle>
@@ -170,7 +192,11 @@ export function MyBets() {
               />
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
-            <Button type="submit" disabled={submitting}>
+            <Button
+              type="submit"
+              disabled={submitting}
+              className="w-full bg-gradient-to-r from-violet-600 via-red-600 to-lime-400 text-white hover:opacity-90"
+            >
               {submitting ? 'A registar...' : 'Registar aposta'}
             </Button>
           </form>

@@ -38,12 +38,13 @@ export function Leaderboard() {
       const computed = profileList.map((profile) => {
         const userBets = betList.filter((b) => b.user_id === profile.id)
         const profit = userBets.reduce((sum, b) => sum + betProfit(b), 0)
-        const pendingCount = userBets.filter((b) => b.status === 'pending').length
+        const pendingBets = userBets.filter((b) => b.status === 'pending')
+        const pendingStake = pendingBets.reduce((sum, b) => sum + b.stake, 0)
         return {
           profile,
           profit,
-          balance: profile.starting_balance + profit,
-          pendingCount,
+          balance: profile.starting_balance + profit - pendingStake,
+          pendingCount: pendingBets.length,
         }
       })
 

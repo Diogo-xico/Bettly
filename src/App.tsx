@@ -6,6 +6,7 @@ import { BottomNav } from './components/BottomNav'
 import { Login } from './pages/Login'
 import { MyBets } from './pages/MyBets'
 import { Leaderboard } from './pages/Leaderboard'
+import { Rules } from './pages/Rules'
 import { Admin } from './pages/Admin'
 
 function App() {
@@ -30,6 +31,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <Leaderboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/regras"
+                element={
+                  <ProtectedRoute>
+                    <Rules />
                   </ProtectedRoute>
                 }
               />

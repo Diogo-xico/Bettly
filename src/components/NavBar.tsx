@@ -8,8 +8,8 @@ export function NavBar() {
   if (!session) return null
 
   return (
-    <header className="sticky top-0 z-40 border-b bg-card/95 backdrop-blur supports-backdrop-blur:bg-card/80">
-      <div className="mx-auto flex max-w-2xl items-center justify-between gap-4 px-4 py-3">
+    <header className="sticky top-0 z-40 mx-auto max-w-2xl rounded-b-xl border bg-card/70 backdrop-blur-md">
+      <div className="flex items-center justify-between gap-4 px-4 py-3">
         <div className="font-semibold">Mundial 2026 — Apostas</div>
         <div className="flex items-center gap-3">
           <span className="text-sm text-muted-foreground">{profile?.name}</span>
