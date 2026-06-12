@@ -169,7 +169,7 @@ export function MyBets() {
         <CardContent className="flex flex-wrap items-center justify-between gap-4 pt-6">
           <div>
             <p className="text-sm opacity-90">O teu saldo</p>
-            <p className="text-2xl font-display font-bold tracking-wide">
+            <p className="text-1xl font-display font-bold tracking-wide">
               {balance.toFixed(2)} €
             </p>
           </div>
@@ -177,13 +177,13 @@ export function MyBets() {
             <>
               <div>
                 <p className="text-sm opacity-90">Equipa vencedora</p>
-                <p className="text-2xl font-display font-bold tracking-wide">
+                <p className="text-1xl font-display font-bold tracking-wide">
                   {profile?.predicted_champion}
                 </p>
               </div>
               <div>
                 <p className="text-sm opacity-90">Melhor marcador</p>
-                <p className="text-2xl font-display font-bold tracking-wide">
+                <p className="text-1xl font-display font-bold tracking-wide">
                   {profile?.predicted_top_scorer}
                 </p>
               </div>
@@ -191,7 +191,7 @@ export function MyBets() {
           )}
           <div>
             <p className="text-sm opacity-90">Lucro</p>
-            <p className="text-2xl font-display font-bold tracking-wide">
+            <p className="text-1xl font-display font-bold tracking-wide">
               {profit >= 0 ? "+" : ""}
               {profit.toFixed(2)} €
             </p>
