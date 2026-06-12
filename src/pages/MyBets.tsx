@@ -189,7 +189,7 @@ export function MyBets() {
               </div>
             </>
           )}
-          <div className="text-right">
+          <div>
             <p className="text-sm opacity-90">Lucro</p>
             <p className="text-2xl font-display font-bold tracking-wide">
               {profit >= 0 ? "+" : ""}
