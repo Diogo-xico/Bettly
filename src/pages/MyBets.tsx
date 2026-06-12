@@ -1,13 +1,13 @@
-import { useEffect, useState, type FormEvent } from 'react'
-import { ExternalLink, Target, Trash2 } from 'lucide-react'
-import { supabase } from '../lib/supabaseClient'
-import { useAuth } from '../context/AuthContext'
-import { betProfit, type Bet } from '../lib/types'
-import { StatusBadge } from '../components/StatusBadge'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useEffect, useState, type FormEvent } from "react";
+import { ExternalLink, Target, Trash2 } from "lucide-react";
+import { supabase } from "../lib/supabaseClient";
+import { useAuth } from "../context/AuthContext";
+import { betProfit, type Bet } from "../lib/types";
+import { StatusBadge } from "../components/StatusBadge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -15,151 +15,153 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
-import { cn } from '@/lib/utils'
+} from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 
 export function MyBets() {
-  const { session, profile, refreshProfile } = useAuth()
-  const [bets, setBets] = useState<Bet[]>([])
-  const [loading, setLoading] = useState(true)
+  const { session, profile, refreshProfile } = useAuth();
+  const [bets, setBets] = useState<Bet[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const [description, setDescription] = useState('')
-  const [odd, setOdd] = useState('')
-  const [stake, setStake] = useState('')
-  const [proofFile, setProofFile] = useState<File | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [submitting, setSubmitting] = useState(false)
+  const [description, setDescription] = useState("");
+  const [odd, setOdd] = useState("");
+  const [stake, setStake] = useState("");
+  const [proofFile, setProofFile] = useState<File | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  const [predictedChampion, setPredictedChampion] = useState('')
-  const [predictedTopScorer, setPredictedTopScorer] = useState('')
-  const [savingPredictions, setSavingPredictions] = useState(false)
-  const [predictionsError, setPredictionsError] = useState<string | null>(null)
+  const [predictedChampion, setPredictedChampion] = useState("");
+  const [predictedTopScorer, setPredictedTopScorer] = useState("");
+  const [savingPredictions, setSavingPredictions] = useState(false);
+  const [predictionsError, setPredictionsError] = useState<string | null>(null);
 
   async function loadBets() {
-    if (!session) return
-    setLoading(true)
+    if (!session) return;
+    setLoading(true);
     const { data } = await supabase
-      .from('bets')
-      .select('*')
-      .eq('user_id', session.user.id)
-      .order('created_at', { ascending: false })
-    setBets(data ?? [])
-    setLoading(false)
+      .from("bets")
+      .select("*")
+      .eq("user_id", session.user.id)
+      .order("created_at", { ascending: false });
+    setBets(data ?? []);
+    setLoading(false);
   }
 
   useEffect(() => {
-    loadBets()
+    loadBets();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session?.user.id])
+  }, [session?.user.id]);
 
   useEffect(() => {
-    setPredictedChampion(profile?.predicted_champion ?? '')
-    setPredictedTopScorer(profile?.predicted_top_scorer ?? '')
-  }, [profile])
+    setPredictedChampion(profile?.predicted_champion ?? "");
+    setPredictedTopScorer(profile?.predicted_top_scorer ?? "");
+  }, [profile]);
 
   async function handleSavePredictions(e: FormEvent) {
-    e.preventDefault()
-    if (!session) return
-    setPredictionsError(null)
+    e.preventDefault();
+    if (!session) return;
+    setPredictionsError(null);
 
     if (!predictedChampion.trim() || !predictedTopScorer.trim()) {
-      setPredictionsError('Preenche os dois palpites antes de guardar.')
-      return
+      setPredictionsError("Preenche os dois palpites antes de guardar.");
+      return;
     }
 
-    setSavingPredictions(true)
+    setSavingPredictions(true);
     try {
       await supabase
-        .from('profiles')
+        .from("profiles")
         .update({
           predicted_champion: predictedChampion.trim(),
           predicted_top_scorer: predictedTopScorer.trim(),
         })
-        .eq('id', session.user.id)
-      await refreshProfile()
+        .eq("id", session.user.id);
+      await refreshProfile();
     } finally {
-      setSavingPredictions(false)
+      setSavingPredictions(false);
     }
   }
 
   async function handleSubmit(e: FormEvent) {
-    e.preventDefault()
-    setError(null)
+    e.preventDefault();
+    setError(null);
 
-    const oddValue = Number(odd)
-    const stakeValue = Number(stake)
+    const oddValue = Number(odd);
+    const stakeValue = Number(stake);
 
     if (!description.trim()) {
-      setError('Descreve a aposta.')
-      return
+      setError("Descreve a aposta.");
+      return;
     }
     if (Number.isNaN(oddValue) || oddValue < 1.2 || oddValue > 10) {
-      setError('A odd tem de estar entre 1.2 e 10.')
-      return
+      setError("A odd tem de estar entre 1.2 e 10.");
+      return;
     }
     if (Number.isNaN(stakeValue) || stakeValue <= 0) {
-      setError('O valor apostado tem de ser maior que 0.')
-      return
+      setError("O valor apostado tem de ser maior que 0.");
+      return;
     }
     if (!proofFile) {
-      setError('Anexa um print/comprovativo da aposta.')
-      return
+      setError("Anexa um print/comprovativo da aposta.");
+      return;
     }
 
-    setSubmitting(true)
+    setSubmitting(true);
     try {
-      const userId = session!.user.id
-      const ext = proofFile.name.split('.').pop()
-      const path = `${userId}/${crypto.randomUUID()}.${ext}`
+      const userId = session!.user.id;
+      const ext = proofFile.name.split(".").pop();
+      const path = `${userId}/${crypto.randomUUID()}.${ext}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('bet-proofs')
-        .upload(path, proofFile)
+        .from("bet-proofs")
+        .upload(path, proofFile);
 
       if (uploadError) {
-        setError(`Erro ao enviar o print: ${uploadError.message}`)
-        return
+        setError(`Erro ao enviar o print: ${uploadError.message}`);
+        return;
       }
 
-      const { data: publicUrlData } = supabase.storage.from('bet-proofs').getPublicUrl(path)
+      const { data: publicUrlData } = supabase.storage
+        .from("bet-proofs")
+        .getPublicUrl(path);
 
-      const { error: insertError } = await supabase.from('bets').insert({
+      const { error: insertError } = await supabase.from("bets").insert({
         user_id: userId,
         description: description.trim(),
         odd: oddValue,
         stake: stakeValue,
         proof_url: publicUrlData.publicUrl,
-      })
+      });
 
       if (insertError) {
-        setError(`Erro ao registar a aposta: ${insertError.message}`)
-        return
+        setError(`Erro ao registar a aposta: ${insertError.message}`);
+        return;
       }
 
-      setDescription('')
-      setOdd('')
-      setStake('')
-      setProofFile(null)
-      await loadBets()
+      setDescription("");
+      setOdd("");
+      setStake("");
+      setProofFile(null);
+      await loadBets();
     } finally {
-      setSubmitting(false)
+      setSubmitting(false);
     }
   }
 
   async function handleDelete(bet: Bet) {
-    if (!confirm('Apagar esta aposta?')) return
-    await supabase.from('bets').delete().eq('id', bet.id)
-    await loadBets()
+    if (!confirm("Apagar esta aposta?")) return;
+    await supabase.from("bets").delete().eq("id", bet.id);
+    await loadBets();
   }
 
-  const profit = bets.reduce((sum, bet) => sum + betProfit(bet), 0)
+  const profit = bets.reduce((sum, bet) => sum + betProfit(bet), 0);
   const pendingStake = bets
-    .filter((bet) => bet.status === 'pending')
-    .reduce((sum, bet) => sum + bet.stake, 0)
-  const balance = (profile?.starting_balance ?? 0) + profit - pendingStake
+    .filter((bet) => bet.status === "pending")
+    .reduce((sum, bet) => sum + bet.stake, 0);
+  const balance = (profile?.starting_balance ?? 0) + profit - pendingStake;
   const hasSavedPredictions = Boolean(
     profile?.predicted_champion && profile?.predicted_top_scorer,
-  )
+  );
 
   return (
     <div className="flex flex-col gap-6">
@@ -167,24 +169,30 @@ export function MyBets() {
         <CardContent className="flex flex-wrap items-center justify-between gap-4 pt-6">
           <div>
             <p className="text-sm opacity-90">O teu saldo</p>
-            <p className="text-3xl font-bold">{balance.toFixed(2)} €</p>
+            <p className="text-2xl font-display font-bold tracking-wide">
+              {balance.toFixed(2)} €
+            </p>
           </div>
           {hasSavedPredictions && (
             <>
               <div>
                 <p className="text-sm opacity-90">Equipa vencedora</p>
-                <p className="text-3xl font-bold">{profile?.predicted_champion}</p>
+                <p className="text-2xl font-display font-bold tracking-wide">
+                  {profile?.predicted_champion}
+                </p>
               </div>
               <div>
                 <p className="text-sm opacity-90">Melhor marcador</p>
-                <p className="text-3xl font-bold">{profile?.predicted_top_scorer}</p>
+                <p className="text-2xl font-display font-bold tracking-wide">
+                  {profile?.predicted_top_scorer}
+                </p>
               </div>
             </>
           )}
           <div className="text-right">
             <p className="text-sm opacity-90">Lucro</p>
-            <p className="text-lg font-semibold">
-              {profit >= 0 ? '+' : ''}
+            <p className="text-2xl font-display font-bold tracking-wide">
+              {profit >= 0 ? "+" : ""}
               {profit.toFixed(2)} €
             </p>
           </div>
@@ -200,7 +208,10 @@ export function MyBets() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <form className="flex flex-col gap-4" onSubmit={handleSavePredictions}>
+            <form
+              className="flex flex-col gap-4"
+              onSubmit={handleSavePredictions}
+            >
               <p className="text-sm text-muted-foreground">
                 Só podes submeter estes palpites uma vez.
               </p>
@@ -234,7 +245,7 @@ export function MyBets() {
                 disabled={savingPredictions}
                 className="w-full bg-gradient-to-r from-violet-600 via-red-600 to-lime-400 text-white hover:opacity-90"
               >
-                {savingPredictions ? 'A guardar...' : 'Guardar palpites'}
+                {savingPredictions ? "A guardar..." : "Guardar palpites"}
               </Button>
             </form>
           </CardContent>
@@ -297,7 +308,7 @@ export function MyBets() {
               disabled={submitting}
               className="w-full bg-gradient-to-r from-violet-600 via-red-600 to-lime-400 text-white hover:opacity-90"
             >
-              {submitting ? 'A registar...' : 'Registar aposta'}
+              {submitting ? "A registar..." : "Registar aposta"}
             </Button>
           </form>
         </CardContent>
@@ -311,7 +322,9 @@ export function MyBets() {
           {loading ? (
             <p className="text-sm text-muted-foreground">A carregar...</p>
           ) : bets.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Ainda não registaste nenhuma aposta.</p>
+            <p className="text-sm text-muted-foreground">
+              Ainda não registaste nenhuma aposta.
+            </p>
           ) : (
             <Table>
               <TableHeader>
@@ -328,7 +341,9 @@ export function MyBets() {
               <TableBody>
                 {bets.map((bet) => (
                   <TableRow key={bet.id}>
-                    <TableCell className="max-w-50 whitespace-normal">{bet.description}</TableCell>
+                    <TableCell className="max-w-50 whitespace-normal">
+                      {bet.description}
+                    </TableCell>
                     <TableCell>{bet.odd.toFixed(2)}</TableCell>
                     <TableCell>{bet.stake.toFixed(2)} €</TableCell>
                     <TableCell>
@@ -336,11 +351,15 @@ export function MyBets() {
                     </TableCell>
                     <TableCell
                       className={cn(
-                        'font-semibold',
-                        betProfit(bet) >= 0 ? 'text-success' : 'text-destructive'
+                        "font-semibold",
+                        betProfit(bet) >= 0
+                          ? "text-success"
+                          : "text-destructive",
                       )}
                     >
-                      {bet.status === 'pending' ? '-' : `${betProfit(bet).toFixed(2)} €`}
+                      {bet.status === "pending"
+                        ? "-"
+                        : `${betProfit(bet).toFixed(2)} €`}
                     </TableCell>
                     <TableCell>
                       {bet.proof_url && (
@@ -355,7 +374,7 @@ export function MyBets() {
                       )}
                     </TableCell>
                     <TableCell>
-                      {bet.status === 'pending' && (
+                      {bet.status === "pending" && (
                         <Button
                           variant="ghost"
                           size="icon"
@@ -374,5 +393,5 @@ export function MyBets() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
