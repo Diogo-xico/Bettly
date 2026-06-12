@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { ExternalLink, Trash2 } from 'lucide-react'
+import { ExternalLink, Target, Trash2 } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../context/AuthContext'
 import { betProfit, type Bet } from '../lib/types'
@@ -19,7 +19,7 @@ import {
 import { cn } from '@/lib/utils'
 
 export function MyBets() {
-  const { session, profile } = useAuth()
+  const { session, profile, refreshProfile } = useAuth()
   const [bets, setBets] = useState<Bet[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -29,6 +29,11 @@ export function MyBets() {
   const [proofFile, setProofFile] = useState<File | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+
+  const [predictedChampion, setPredictedChampion] = useState('')
+  const [predictedTopScorer, setPredictedTopScorer] = useState('')
+  const [savingPredictions, setSavingPredictions] = useState(false)
+  const [predictionsError, setPredictionsError] = useState<string | null>(null)
 
   async function loadBets() {
     if (!session) return
@@ -46,6 +51,36 @@ export function MyBets() {
     loadBets()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.user.id])
+
+  useEffect(() => {
+    setPredictedChampion(profile?.predicted_champion ?? '')
+    setPredictedTopScorer(profile?.predicted_top_scorer ?? '')
+  }, [profile])
+
+  async function handleSavePredictions(e: FormEvent) {
+    e.preventDefault()
+    if (!session) return
+    setPredictionsError(null)
+
+    if (!predictedChampion.trim() || !predictedTopScorer.trim()) {
+      setPredictionsError('Preenche os dois palpites antes de guardar.')
+      return
+    }
+
+    setSavingPredictions(true)
+    try {
+      await supabase
+        .from('profiles')
+        .update({
+          predicted_champion: predictedChampion.trim(),
+          predicted_top_scorer: predictedTopScorer.trim(),
+        })
+        .eq('id', session.user.id)
+      await refreshProfile()
+    } finally {
+      setSavingPredictions(false)
+    }
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -122,15 +157,30 @@ export function MyBets() {
     .filter((bet) => bet.status === 'pending')
     .reduce((sum, bet) => sum + bet.stake, 0)
   const balance = (profile?.starting_balance ?? 0) + profit - pendingStake
+  const hasSavedPredictions = Boolean(
+    profile?.predicted_champion && profile?.predicted_top_scorer,
+  )
 
   return (
     <div className="flex flex-col gap-6">
       <Card className="border-none bg-gradient-to-r from-violet-600 via-red-600 to-lime-400 text-white">
-        <CardContent className="flex items-center justify-between pt-6">
+        <CardContent className="flex flex-wrap items-center justify-between gap-4 pt-6">
           <div>
             <p className="text-sm opacity-90">O teu saldo</p>
             <p className="text-3xl font-bold">{balance.toFixed(2)} €</p>
           </div>
+          {hasSavedPredictions && (
+            <>
+              <div>
+                <p className="text-sm opacity-90">Equipa vencedora</p>
+                <p className="text-3xl font-bold">{profile?.predicted_champion}</p>
+              </div>
+              <div>
+                <p className="text-sm opacity-90">Melhor marcador</p>
+                <p className="text-3xl font-bold">{profile?.predicted_top_scorer}</p>
+              </div>
+            </>
+          )}
           <div className="text-right">
             <p className="text-sm opacity-90">Lucro</p>
             <p className="text-lg font-semibold">
@@ -140,6 +190,56 @@ export function MyBets() {
           </div>
         </CardContent>
       </Card>
+
+      {!hasSavedPredictions && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Target className="size-5 text-primary" />
+              Os meus palpites
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form className="flex flex-col gap-4" onSubmit={handleSavePredictions}>
+              <p className="text-sm text-muted-foreground">
+                Só podes submeter estes palpites uma vez.
+              </p>
+              <div className="flex gap-4">
+                <div className="flex flex-1 flex-col gap-1.5">
+                  <Label htmlFor="predicted-champion">Equipa vencedora</Label>
+                  <Input
+                    id="predicted-champion"
+                    type="text"
+                    placeholder="Ex: Brasil"
+                    value={predictedChampion}
+                    onChange={(e) => setPredictedChampion(e.target.value)}
+                  />
+                </div>
+                <div className="flex flex-1 flex-col gap-1.5">
+                  <Label htmlFor="predicted-top-scorer">Melhor marcador</Label>
+                  <Input
+                    id="predicted-top-scorer"
+                    type="text"
+                    placeholder="Ex: Mbappé"
+                    value={predictedTopScorer}
+                    onChange={(e) => setPredictedTopScorer(e.target.value)}
+                  />
+                </div>
+              </div>
+              {predictionsError && (
+                <p className="text-sm text-destructive">{predictionsError}</p>
+              )}
+              <Button
+                type="submit"
+                disabled={savingPredictions}
+                className="w-full bg-gradient-to-r from-violet-600 via-red-600 to-lime-400 text-white hover:opacity-90"
+              >
+                {savingPredictions ? 'A guardar...' : 'Guardar palpites'}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>

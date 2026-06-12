@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { LineChart as LineChartIcon, Trophy } from "lucide-react";
+import { Award, LineChart as LineChartIcon, Trophy } from "lucide-react";
 import {
   CartesianGrid,
   Legend,
@@ -12,7 +12,7 @@ import {
   YAxis,
 } from "recharts";
 import { supabase } from "../lib/supabaseClient";
-import { betProfit, type Bet, type Profile } from "../lib/types";
+import { betProfit, guessIsCorrect, type Bet, type Profile } from "../lib/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -134,6 +134,33 @@ export function Leaderboard() {
   const yTicks = [];
   for (let v = yMin; v <= yMax; v++) yTicks.push(v);
 
+  const adminProfile = rows.find((r) => r.profile.is_admin)?.profile;
+  const actualChampion = adminProfile?.actual_champion ?? null;
+  const actualTopScorer = adminProfile?.actual_top_scorer ?? null;
+
+  const pointsRows = rows.map((row, i) => {
+    const n = rows.length;
+    const balancePoints = n > 1 ? 4 - ((i * 3) / (n - 1)) : 4;
+    const championPoints = guessIsCorrect(row.profile.predicted_champion, actualChampion)
+      ? 2
+      : 0;
+    const topScorerPoints = guessIsCorrect(
+      row.profile.predicted_top_scorer,
+      actualTopScorer,
+    )
+      ? 3
+      : 0;
+    return {
+      profile: row.profile,
+      balancePoints,
+      championPoints,
+      topScorerPoints,
+      total: balancePoints + championPoints + topScorerPoints,
+    };
+  });
+
+  pointsRows.sort((a, b) => b.total - a.total);
+
   return (
     <div className="flex flex-col gap-6">
       <Card>
@@ -249,6 +276,63 @@ export function Leaderboard() {
                 Nº de apostas
               </p>
             </>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Award className="size-5 text-primary" />
+            Classificação por pontos
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <p className="text-sm text-muted-foreground">A carregar...</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>#</TableHead>
+                  <TableHead>Nome</TableHead>
+                  <TableHead>Saldo</TableHead>
+                  <TableHead>Vencedor</TableHead>
+                  <TableHead>Marcador</TableHead>
+                  <TableHead>Total</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {pointsRows.map((row, i) => (
+                  <TableRow key={row.profile.id}>
+                    <TableCell className="font-semibold">{i + 1}</TableCell>
+                    <TableCell>{row.profile.name}</TableCell>
+                    <TableCell>{row.balancePoints.toFixed(1)}</TableCell>
+                    <TableCell
+                      className={cn(
+                        row.championPoints > 0
+                          ? "font-semibold text-success"
+                          : "text-muted-foreground",
+                      )}
+                    >
+                      {row.championPoints}
+                    </TableCell>
+                    <TableCell
+                      className={cn(
+                        row.topScorerPoints > 0
+                          ? "font-semibold text-success"
+                          : "text-muted-foreground",
+                      )}
+                    >
+                      {row.topScorerPoints}
+                    </TableCell>
+                    <TableCell className="font-semibold">
+                      {row.total.toFixed(1)}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           )}
         </CardContent>
       </Card>

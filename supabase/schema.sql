@@ -12,8 +12,18 @@ create table if not exists public.profiles (
   name text not null,
   is_admin boolean not null default false,
   starting_balance numeric not null default 1000,
+  predicted_champion text,
+  predicted_top_scorer text,
+  actual_champion text,
+  actual_top_scorer text,
   created_at timestamptz not null default now()
 );
+
+-- Caso a tabela já exista de uma instalação anterior, adiciona as colunas novas
+alter table public.profiles add column if not exists predicted_champion text;
+alter table public.profiles add column if not exists predicted_top_scorer text;
+alter table public.profiles add column if not exists actual_champion text;
+alter table public.profiles add column if not exists actual_top_scorer text;
 
 alter table public.profiles enable row level security;
 
