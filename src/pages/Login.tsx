@@ -1,27 +1,33 @@
-import { useState, type FormEvent } from 'react'
-import { Navigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { useState, type FormEvent } from "react";
+import { Navigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 export function Login() {
-  const { session, signIn } = useAuth()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const [submitting, setSubmitting] = useState(false)
+  const { session, signIn } = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  if (session) return <Navigate to="/" replace />
+  if (session) return <Navigate to="/" replace />;
 
   async function handleSubmit(e: FormEvent) {
-    e.preventDefault()
-    setError(null)
-    setSubmitting(true)
-    const { error } = await signIn(email, password)
-    setSubmitting(false)
-    if (error) setError(error)
+    e.preventDefault();
+    setError(null);
+    setSubmitting(true);
+    const { error } = await signIn(email, password);
+    setSubmitting(false);
+    if (error) setError(error);
   }
 
   return (
@@ -31,8 +37,10 @@ export function Login() {
     >
       <Card className="w-full max-w-sm border-white/40 bg-white/25 backdrop-blur-xl shadow-2xl">
         <CardHeader>
-          <CardTitle className="text-xl">Mundial 2026 — Apostas</CardTitle>
-          <CardDescription>Entra com a conta que te foi criada.</CardDescription>
+          <CardTitle className="text-xl">Mundial 2026</CardTitle>
+          <CardDescription>
+            Entra com a conta que te foi criada.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
@@ -64,11 +72,11 @@ export function Login() {
               disabled={submitting}
               className="w-full bg-gradient-to-r from-violet-600 via-red-600 to-lime-400 text-white hover:opacity-90"
             >
-              {submitting ? 'A entrar...' : 'Entrar'}
+              {submitting ? "A entrar..." : "Entrar"}
             </Button>
           </form>
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
